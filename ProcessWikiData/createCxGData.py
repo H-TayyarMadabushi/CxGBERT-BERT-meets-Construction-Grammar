@@ -22,15 +22,21 @@ class createCxGData:
         parser.add_argument('text_location'    , type=str, help='path, including file name of full original data.')
         parser.add_argument('out_path'         , type=str, help='output path')
         
-        parser.add_argument('--start'          , type=int, help='if split, start of cxg file name of cxg should have HASH where numbers between start and end will be replaced.', default=None ) 
-        parser.add_argument('--end'            , type=int, help='if split, end of cxg file name of cxg should have HASH where numbers between start and end will be replaced.'  , default=None ) 
-    
         parser.add_argument('--cxg_freq'       , action='store_true', help='if set, will print number of sentences in each construction and quit'                               , default=False ) 
-        parser.add_argument('--do_feat_select' , action='store_true', help='if set, will perform pca on cxg counts and sentences to find cxgs of relevance. (default false)'    , default=False ) 
-        parser.add_argument('--force_feat_sel' , action='store_true', help='if set, will perform pca on cxg counts and sentences to find cxgs of relevance. (default false)'    , default=False ) 
+
+        parser.add_argument('--do_feat_select' , action='store_true', help='if set, will pick a subset of cxg based on counts (see -feat_max, min). (default false)'            , default=False ) 
+        parser.add_argument('--feat_max'  , type=int                , help='Will ignore constructions with more than this many sentences (default 100)'                         , default=1000  ) 
+        parser.add_argument('--feat_min'  , type=int                , help='Will ignore constructions with less than this many sentences (default   0)'                         , default=50    ) 
+
+        parser.add_argument('--force_feat_sel' , action='store_true', help='if set, recalculate features even if pickled version exists. (default false)'                       , default=False ) 
         
         parser.add_argument('--cxg_split'      , action='store_true', help='are the cxg pickle files split?'                                                                    , default=False )
 
+        parser.add_argument('--start'          , type=int, help='if split, start of cxg file name of cxg should have HASH where numbers between start and end will be replaced.', default=None ) 
+        parser.add_argument('--end'            , type=int, help='if split, end of cxg file name of cxg should have HASH where numbers between start and end will be replaced.'  , default=None ) 
+        
+        parser.add_argument('--run_name'       , type=str, help='Some name to identify output files with - will be appended to end of output files. (default '' )'              , default='' ) 
+         
 
         self.args = parser.parse_args()
 
@@ -86,6 +92,7 @@ class createCxGData:
                 text = text[ :len(self.cxg_list) ]
             else : 
                 raise Exception( "CxG longer than text!" ) 
+        assert len( self.cxg_list ) == len( text ) 
         self.text = text
         return
         
@@ -111,9 +118,24 @@ class createCxGData:
         self.sorted_cxgs = sorted( data.keys(), key=lambda x:len(data[x]), reverse=True )
         return
 
-    def write_base_data( self ) : 
+    def write_base_data( self, prune_picked_sents=False ) : 
 
         data        = self.text
+        
+        if prune_picked_sents : 
+            data         = list()
+            prev_newline = True
+            for index in tqdm( range( len( self.text ) ), desc="Prune data for base" ) : 
+                this_is_newline = False
+                if self.text[ index ] == '' or not self.included_sentences[ index ] : 
+                    this_is_newline = True
+                if this_is_newline and prev_newline : 
+                    continue
+                line = self.text[ index ] 
+                if not self.included_sentences[ index ] : 
+                    line = ''
+                data.append( line ) 
+                prev_newline = this_is_newline
         data_len    = len( data ) 
         multiplier  = int( self.picked_cxg_sents / data_len )
         part_mult   = ( self.picked_cxg_sents / data_len ) - multiplier
@@ -123,7 +145,12 @@ class createCxGData:
         data        = data * multiplier
         data       += new_data
             
-        outfile = os.path.join( self.args.out_path, 'base_train_data.txt' ) 
+        
+        file_info = '_all_' 
+        if prune_picked_sents : 
+            file_info = '_cxg_only_'
+
+        outfile = os.path.join( self.args.out_path, 'base' + file_info + 'train_data_' + self.args.run_name + '.txt' ) 
         with open( outfile, 'w' ) as fh : 
                 fh.write( '\n'.join( data ) ) 
         print( "Wrote base train data to: ", outfile ) 
@@ -132,7 +159,7 @@ class createCxGData:
         sys.stdout.flush()
         random.shuffle( data ) 
         print( "Done." )
-        outfile = os.path.join( self.args.out_path, 'rand_train_data.txt' ) 
+        outfile = os.path.join( self.args.out_path, 'rand' + file_info + 'train_data_' + self.args.run_name + '.txt' ) 
         with open( outfile, 'w' ) as fh : 
                 fh.write( '\n'.join( data ) ) 
         print( "Wrote rand train data to: ", outfile ) 
@@ -140,9 +167,12 @@ class createCxGData:
             
     def write_cxg_data( self ) : 
 
+        ## Used to make sure we pick same number of base sentences
         self.picked_cxg_sents = 0
+        ## Used to make sure we pick same base sentences
+        self.included_sentences = list()
         
-        ## Each picked cxg is a "document" and there is an extra one for the rest.
+        ## Each picked cxg is a "document" and there is an extra one for the rst.
         cxg_text = [ [] for i in range( len( self.selected_features ) + 1 ) ] 
         for index in tqdm( range( len( self.text ) ), desc="Creating CxG Output" ) : 
             this_sent_picked = False
@@ -155,37 +185,25 @@ class createCxGData:
             if not this_sent_picked : 
                 cxg_text[-1].append( self.text[ index ] )
                 self.picked_cxg_sents += 1
+            self.included_sentences.append( this_sent_picked )
                     
         for index in tqdm( range( len( cxg_text ) ), desc="Shuffle CxG docs" ) : 
             random.shuffle( cxg_text[ index ] ) 
-        outfile = os.path.join( self.args.out_path, 'cxg_train_data.txt' ) 
+
+        outfile = os.path.join( self.args.out_path, 'cxg_only_train_data_' + self.args.run_name + '.txt' )
         with open( outfile, 'w' ) as fh : 
-            for doc in tqdm( cxg_text, desc="Writing CxG data" ) : 
+            for doc in tqdm( cxg_text[:-1], desc="Writing CxG Only data" ) : 
                 fh.write( '\n'.join( doc ) ) 
                 fh.write( '\n' )
-        print( "Wrote CxG train data to: ", outfile ) 
-            
+        print( "Wrote CxG Only train data to: ", outfile ) 
 
-    def write_data( data, out_location ) : 
-        sorted_constructions = sorted( data.keys(), key=lambda x:len(data[x]), reverse=True )
-        sorted_text = list()
-        for x in sorted_constructions : 
-            if len( data[x] ) > 1000 : 
-                continue
-            if len( data[ x ] ) < 100 : 
-                break
-            sorted_text.append( data[ x ] ) 
-        text = ''
-        for elem in sorted_text : 
-            text += '\n'.join( elem ) 
-            text += '\n'
-        print( len( text.split( '\n' ) ) ) 
-        output_file = out_location + 'cxg_sentences_v2.txt'
-        fh = open( output_file, 'w' ) 
-        fh.write( text ) 
-        fh.close()
-        print( "Wrote to ", output_file )
-        return
+        outfile = os.path.join( self.args.out_path, 'cxg_all_train_data_' + self.args.run_name + '.txt' )
+        with open( outfile, 'w' ) as fh : 
+            for doc in tqdm( cxg_text, desc="Writing CxG all data" ) : 
+                fh.write( '\n'.join( doc ) ) 
+                fh.write( '\n' )
+        print( "Wrote CxG all train data to: ", outfile ) 
+            
 
     def print_cxg_freq( self ) : 
         output    = ''
@@ -202,15 +220,49 @@ class createCxGData:
         return
 
     def do_feat_select( self ) : 
-        ## Must now change format
-        ##   X : Features (0 not included, 1 included)
-        ##   y : Labels, # of construction
 
-        store_features = os.path.join( self.args.out_path, 'selected_features.pk' )
+        store_features = os.path.join( self.args.out_path, 'selected_features_' + self.args.run_name + '.pk' )
         if os.path.exists( store_features ) and not self.args.force_feat_sel : 
             print( "WARNING: Loading precalculated picked features, use --force_feat_sel to recalculate." )
             self.selected_features = pickle.load( open( store_features, 'rb' ) ) 
             return 
+
+        self.selected_features = list()
+        for construction in self.sorted_cxgs :
+            if len( self.cxg_dict[ construction ] ) > self.args.feat_max :
+                continue
+            if len( self.cxg_dict[ construction ] ) < self.args.feat_min : 
+                break
+            self.selected_features.append( construction ) 
+
+        pickle.dump( self.selected_features, open( store_features, 'wb' ) ) 
+
+        print( "Wrote to ", store_features )
+
+        print( "Picked constructions: ", len( self.selected_features ) )
+        sent_count  = 0
+        check_on    = 50000
+        if check_on > len( self.text ) :
+            check_on = len( self.text ) 
+        for index in tqdm( range( check_on ), desc="Prune Sents" ) : 
+            if any( [ ( i in self.selected_features ) for i in self.cxg_list[ index ] ] ) : 
+                sent_count += 1
+
+        print( "Sentences that contain picked constructions: ", sent_count ) 
+        print( "%: ", ( sent_count / check_on ) * 100 )
+
+        print( "Will exit, simply rerun to use precalculated features." ) 
+        sys.exit()
+            
+
+        ## Feature Selection using VarianceThreshold, no longer used. 
+
+        """
+
+        ## Must now change format
+        ##   X : Features (0 not included, 1 included)
+        ##   y : Labels, # of construction
+
 
         X, y = list(), list()
         total_constructions = 22628 ## V2 from C2xG github repo
@@ -246,6 +298,7 @@ class createCxGData:
 
         print( "Will exit, simply rerun to use precalculated features." ) 
         sys.exit()
+        """
 
     def main( self ) : 
 
@@ -260,9 +313,9 @@ class createCxGData:
             self.print_cxg_freq()
             return
 
+        self.load_text_data()
+        self.compile_data( include_text=True ) 
         if self.args.do_feat_select : 
-            self.load_text_data()
-            self.compile_data( include_text=True ) 
             self.do_feat_select()
         else : 
             self.selected_features = self.cxg_list
@@ -273,7 +326,8 @@ class createCxGData:
             self.compile_data( include_text=True ) 
             
         self.write_cxg_data()
-        self.write_base_data()
+        self.write_base_data( prune_picked_sents=False )
+        self.write_base_data( prune_picked_sents=True  )
         
         return
 
@@ -281,9 +335,5 @@ if __name__ == '__main__' :
 
     data_creator = createCxGData()
     data_creator.main()
-    # cxg_location, text_location, out_location = parse_args()
-    # write_data( compile_data( cxg_location, text_location ), out_location )
 
-    ## Base: 500, 100
-    ## V2: 1000, 100
-    ## V3: > 1000
+    ## Base: 1000, 50 on 500,000
