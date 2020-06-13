@@ -1,5 +1,7 @@
 import os
+import csv
 import sys
+import copy
 import pickle
 import random
 import argparse
@@ -120,8 +122,12 @@ class createCxGData:
 
     def write_base_data( self, prune_picked_sents=False ) : 
 
-        data        = self.text
+        data        = copy.copy( self.text ) 
+
+        ## If prune_picked_sents then cxg_only
         
+        ## Version 1: If there is a missed line break document
+        """
         if prune_picked_sents : 
             data         = list()
             prev_newline = True
@@ -136,15 +142,39 @@ class createCxGData:
                     line = ''
                 data.append( line ) 
                 prev_newline = this_is_newline
+        """
+
+        ## Version 2: Ignore missed lines
+        if prune_picked_sents : 
+            data         = list()
+            for index in tqdm( range( len( self.text ) ), desc="Prune data for base" ) : 
+                this_is_newline = False
+                if self.text[ index ] == '' :
+                    data.append( self.text[ index ] ) 
+                if not self.included_sentences[ index ] : 
+                    continue
+                data.append( self.text[ index ] ) 
+
+        ## Sanity check.
+        text_articles = len( [ x for x in self.text if x == '' ] ) 
+        data_articles = len( [ x for x in data      if x == '' ] ) 
+        assert data_articles == text_articles
+
+        picked_len  = self.picked_cxg_all_sents
+        if prune_picked_sents : 
+            picked_len = self.picked_cxg_sents
         data_len    = len( data ) 
-        multiplier  = int( self.picked_cxg_sents / data_len )
-        part_mult   = ( self.picked_cxg_sents / data_len ) - multiplier
-        trun_index  = int( data_len * part_mult )
-        new_data    = data[ : trun_index ]
         
-        data        = data * multiplier
-        data       += new_data
-            
+        if picked_len < data_len : 
+            data    = data[ :picked_len ]
+        else : 
+            multiplier  = int( picked_len / data_len )
+            part_mult   =    ( picked_len / data_len ) - multiplier
+            trun_index  = int( data_len * part_mult )
+            new_data    = data[ : trun_index ]
+        
+            data        = data * multiplier
+            data       += new_data
         
         file_info = '_all_' 
         if prune_picked_sents : 
@@ -164,46 +194,185 @@ class createCxGData:
                 fh.write( '\n'.join( data ) ) 
         print( "Wrote rand train data to: ", outfile ) 
 
+        
+    def _create_probes( self, cxg_text, cxg_what ) : 
+        
+        constructions = len( cxg_text )
+        # Train count will be 4 times this. 
+        dev_count   = constructions 
+        train = list()
+        dev   = list()
+        test  = list()
+
+        docs  = cxg_text
+        
+        sent_picked_count = [ 0        for i in docs ]
+        sent_lens         = [ len( i ) for i in docs ]
+        while ( len( train ) < dev_count  * 4 ) or \
+              ( len( dev   ) < dev_count      ) or \
+              ( len( test  ) < dev_count      ) : 
+            for doc_index in tqdm( range( len( docs ) ), desc="Building Probe" ) : 
+                ## First add positive
+                positives = list()
+                for _ in range( 3 ) : 
+                    sim           = 1
+
+                    doc_sent_id_1 = str( doc_index ) + "." + str( sent_picked_count[ doc_index ] )
+                    if sent_picked_count[ doc_index ] == sent_lens[ doc_index ] :
+                        break
+                    sent_1        = cxg_text[ doc_index ][ sent_picked_count[ doc_index ] ]
+                    sent_picked_count[ doc_index ] += 1
+
+                    if sent_picked_count[ doc_index ] == sent_lens[ doc_index ] :
+                        ## "Put back" sent and break
+                        sent_picked_count[ doc_index ] -= 1 
+                        break
+                    doc_sent_id_2 = str( doc_index ) + "." + str( sent_picked_count[ doc_index ] )
+                    sent_2        = cxg_text[ doc_index ][ sent_picked_count[ doc_index ] ]
+                    sent_picked_count[ doc_index ] += 1
+
+                    positives.append( [ sim, doc_sent_id_1, doc_sent_id_2, sent_1, sent_2 ] ) 
+
+                if len( positives ) > 0 : 
+                    train.append( positives[0] ) 
+                if len( positives ) > 1 : 
+                    if len( dev )  != dev_count :
+                        dev.append(   positives[1] )
+                    else : 
+                        train.append( positives[1] )
+                if len( positives ) > 2 : 
+                    if len( test ) != dev_count : 
+                        test.append(  positives[2] ) 
+                    else : 
+                        train.append( positives[2] ) 
+
+                if len( positives ) == 0 : 
+                    continue
+                ## Now the negatives
+                negatives = list()
+                for _ in range( 3 ) : 
+                    sim           = 0
+
+                    doc_sent_id_1 = str( doc_index ) + "." + str( sent_picked_count[ doc_index ] )
+                    if sent_picked_count[ doc_index ] == sent_lens[ doc_index ] :
+                        break
+                    sent_1        = cxg_text[ doc_index ][ sent_picked_count[ doc_index ] ]
+                    sent_picked_count[ doc_index ] += 1
+                    
+                    doc_sent_id_2   = None
+                    sent2           = None
+                    for _ in range( 10 ) : 
+                        ## Pick a sent from another doc
+                        other_doc_index = doc_index
+                        while other_doc_index == doc_index : 
+                            other_doc_index = random.randrange( 0, constructions )
+
+                        doc_sent_id_2 = str( other_doc_index ) + "." + str( sent_picked_count[ other_doc_index ] )
+                        if sent_picked_count[ other_doc_index ] == sent_lens[ other_doc_index ] :
+                            continue
+                        sent_2        = cxg_text[ other_doc_index ][ sent_picked_count[ other_doc_index ] ]
+                        sent_picked_count[ other_doc_index ] += 1
+                        need_other_sent = False
+                        break
+
+                    negatives.append( [ sim, doc_sent_id_1, doc_sent_id_2, sent_1, sent_2 ] ) 
+                        
+                if len( negatives ) > 0 : 
+                    train.append( negatives[0] ) 
+                if len( negatives ) > 1 : 
+                    if len( dev )  != dev_count :
+                        dev.append(   negatives[1] ) 
+                    else : 
+                        train.append( negatives[1] ) 
+                if len( negatives ) > 2 : 
+                    if len( test ) != dev_count : 
+                        test.append(  negatives[2] ) 
+                    else : 
+                        train.append( negatives[2] ) 
+
+        for ( data, name ) in [ ( train, 'train' ), ( dev, 'dev' ), ( test, 'test' ) ] : 
+            file_name = os.path.join( self.args.out_path, 
+                                      cxg_what + '_probe_' + self.args.run_name + '_' + name + '.tsv' )
+            with open( file_name, 'w' ) as csvfile :
+                writer = csv.writer( csvfile, delimiter='\t' ) 
+                writer.writerows( data ) 
+            print( "Wrote probe {}".format( file_name ) )
+                
+                
+        return
+        
             
     def write_cxg_data( self ) : 
 
         ## Used to make sure we pick same number of base sentences
-        self.picked_cxg_sents = 0
+        self.picked_cxg_sents      = 0
+        self.picked_cxg_all_sents = 0 
         ## Used to make sure we pick same base sentences
         self.included_sentences = list()
+
+        selected_features_dict = dict() ## Do NOT make this defaultdict
+        for index in range( len( self.selected_features ) ) : 
+            selected_features_dict[ self.selected_features[ index ] ] = index
         
-        ## Each picked cxg is a "document" and there is an extra one for the rst.
+        ## Each picked cxg is a "document" and there is an extra one for the rest.
         cxg_text = [ [] for i in range( len( self.selected_features ) + 1 ) ] 
         for index in tqdm( range( len( self.text ) ), desc="Creating CxG Output" ) : 
             this_sent_picked = False
             this_cxgs = self.cxg_list[ index ]
             for cxg in this_cxgs : 
-                if cxg in self.selected_features : 
-                    cxg_text[ self.selected_features.index( cxg ) ].append( self.text[ index ] )
-                    self.picked_cxg_sents += 1
-                    this_sent_picked = True
-            if not this_sent_picked : 
-                cxg_text[-1].append( self.text[ index ] )
+                cxg_index = None
+                try : 
+                    cxg_index = selected_features_dict[ cxg ]
+                except : 
+                    continue
+                cxg_text[ cxg_index ].append( self.text[ index ] )
                 self.picked_cxg_sents += 1
+                self.picked_cxg_all_sents += 1
+                this_sent_picked = True
+            if not this_sent_picked : 
+                if not self.text[ index ] == '' : 
+                    cxg_text[-1].append( self.text[ index ] )
+                    self.picked_cxg_all_sents += 1
             self.included_sentences.append( this_sent_picked )
                     
         for index in tqdm( range( len( cxg_text ) ), desc="Shuffle CxG docs" ) : 
             random.shuffle( cxg_text[ index ] ) 
 
+        count = 0 
+        for index in range( len( cxg_text ) - 1 ) : 
+            count += len( cxg_text[ index ] ) 
+        assert self.picked_cxg_sents == count 
+        count += len( cxg_text[ -1 ] ) 
+        assert self.picked_cxg_all_sents == count 
+
         outfile = os.path.join( self.args.out_path, 'cxg_only_train_data_' + self.args.run_name + '.txt' )
         with open( outfile, 'w' ) as fh : 
-            for doc in tqdm( cxg_text[:-1], desc="Writing CxG Only data" ) : 
+            docs_to_consider = len(cxg_text[:-1])
+            for index in tqdm( range( docs_to_consider ), desc="Writing CxG Only data" ) : 
+                doc = cxg_text[ index ]
                 fh.write( '\n'.join( doc ) ) 
                 fh.write( '\n' )
+                if index != ( docs_to_consider - 1 ) : 
+                    # Avoid trailing newline. 
+                    fh.write( '\n' )
         print( "Wrote CxG Only train data to: ", outfile ) 
 
         outfile = os.path.join( self.args.out_path, 'cxg_all_train_data_' + self.args.run_name + '.txt' )
         with open( outfile, 'w' ) as fh : 
-            for doc in tqdm( cxg_text, desc="Writing CxG all data" ) : 
+            docs_to_consider = len(cxg_text)
+            for index in tqdm( range( docs_to_consider ), desc="Writing CxG all data" ) : 
+                doc = cxg_text[ index ]
                 fh.write( '\n'.join( doc ) ) 
                 fh.write( '\n' )
+                if index != ( docs_to_consider - 1 ) : 
+                    ## Avoid trailing newline.
+                    fh.write( '\n' )
         print( "Wrote CxG all train data to: ", outfile ) 
-            
+
+        self._create_probes( cxg_text[:-1], 'cxg_only' ) 
+        self._create_probes( cxg_text     , 'cxg_all'  ) 
+
+        return
 
     def print_cxg_freq( self ) : 
         output    = ''
@@ -244,12 +413,16 @@ class createCxGData:
         check_on    = 50000
         if check_on > len( self.text ) :
             check_on = len( self.text ) 
+        selected_features_dict = defaultdict( bool )
+        for feature in self.selected_features : 
+            selected_features_dict[ feature ] = True
         for index in tqdm( range( check_on ), desc="Prune Sents" ) : 
-            if any( [ ( i in self.selected_features ) for i in self.cxg_list[ index ] ] ) : 
-                sent_count += 1
+            for cxg in self.cxg_list[ index ] : 
+                if selected_features_dict[ cxg ] : 
+                    sent_count += 1
+                    break
 
-        print( "Sentences that contain picked constructions: ", sent_count ) 
-        print( "%: ", ( sent_count / check_on ) * 100 )
+        print( "Sentences that contain picked constructions (out of {0}) :{1} ({2}%)".format( check_on, sent_count, (( sent_count / check_on ) * 100 ) ) ) 
 
         print( "Will exit, simply rerun to use precalculated features." ) 
         sys.exit()
@@ -336,4 +509,3 @@ if __name__ == '__main__' :
     data_creator = createCxGData()
     data_creator.main()
 
-    ## Base: 1000, 50 on 500,000
