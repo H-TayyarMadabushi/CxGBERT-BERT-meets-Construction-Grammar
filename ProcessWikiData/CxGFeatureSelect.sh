@@ -1,6 +1,18 @@
+
+
 export min=10
 export max=500
+
+if [ $# != 0 ] 
+then
+    export min=$1
+    export max=$2
+fi
+echo "Running with min of $min and max of $max, will pause to allow termination"
+sleep 1
+
 export end=45
+
 export outdir=processed-$min-$max
 if [ -d ../../WikiText-103/$outdir ] 
 then
