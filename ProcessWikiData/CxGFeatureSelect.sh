@@ -1,13 +1,23 @@
-export outdir=processed10-500
+export min=10
+export max=500
+export end=45
+export outdir=processed-$min-$max
+if [ -d ../../WikiText-103/$outdir ] 
+then
+    echo "Outdir ../../WikiText-103/$outdir exists! Exiting ..."
+    exit
+fi
+
+mkdir ../../WikiText-103/$outdir
 python createCxGData.py                                \
     ../../WikiText-103/processed/sents-cxg-tagged-#.pk \
     ../../WikiText-103/processed/sentences.txt         \
     ../../WikiText-103/$outdir/                        \
     --do_feat_select      \
-    --feat_max       500  \
-    --feat_min        10  \
+    --feat_max      $max  \
+    --feat_min      $min  \
     --force_feat_sel      \
     --cxg_split           \
     --start 0             \
-    --end   45            \
-    --run_name 10000_50_45 
+    --end           $end  \
+    --run_name $min-$max-45 
