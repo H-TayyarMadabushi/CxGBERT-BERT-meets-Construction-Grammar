@@ -129,7 +129,7 @@ class createCxGData:
         text_articles = len( [ x for x in self.text if x == '' ] ) 
         data_articles = len( [ x for x in data      if x == '' ] ) 
 
-        version_to_use = 2
+        version_to_use = 1
         if version_to_use == 1 :
             ## Version 1: If there is a missed line break document
             ignored_doc_breaks = 0 
@@ -176,7 +176,9 @@ class createCxGData:
 
         ## Sanity check.
         assert data_articles == text_articles
-
+        
+        ## Repeat or truncate to make sure we get the same length as CxG
+        
         picked_len  = self.picked_cxg_all_sents
         if prune_picked_sents : 
             picked_len = self.picked_cxg_sents
@@ -192,6 +194,26 @@ class createCxGData:
         
             data        = data * multiplier
             data       += new_data
+
+
+        ## Create a probe for base.
+        probe_name = 'base_all'
+        if prune_picked_sents : 
+            ## CxG only
+            probe_name = 'base_cxg'
+        # Create docs
+        docs = list()
+        this_doc = list()
+        for line in data : 
+            if line == '' : 
+                if len( this_doc ) > 0 : 
+                    docs.append( this_doc ) 
+                    this_doc = list()
+                    continue
+            this_doc.append( line ) 
+        self._create_probes( docs, probe_name, limit_docs=True ) 
+
+
         
         file_info = '_all_' 
         if prune_picked_sents : 
@@ -212,13 +234,16 @@ class createCxGData:
         print( "Wrote rand train data to: ", outfile ) 
 
         
-    def _create_probes( self, cxg_text, cxg_what ) : 
+    def _create_probes( self, cxg_text, cxg_what, limit_docs=False ) : 
         
         constructions = len( cxg_text )
         # Train count will be 4 times this. 
         dev_count   = constructions * 2
         if dev_count * 4 < 10000 : 
             dev_count = int( 10000 / 4 ) + 10 ## round up 
+        if limit_docs : 
+            if dev_count * 4 > 100000 : 
+                dev_count = int( 100000 / 4 ) 
         train = list()
         dev   = list()
         test  = list()
@@ -227,9 +252,14 @@ class createCxGData:
         
         sent_picked_count = [ 0        for i in docs ]
         sent_lens         = [ len( i ) for i in docs ]
+        passes_over_data  = 0 
         while ( len( train ) < dev_count  * 4 ) or \
               ( len( dev   ) < dev_count      ) or \
               ( len( test  ) < dev_count      ) : 
+            passes_over_data += 1
+            if passes_over_data > 10 : 
+                print( "WARNING: Ran out of data to create probes, have train {}, test {}, dev {}. Will continue.".format( len( train ), len( test ), len( dev ) ) ) 
+                break
             for doc_index in tqdm( range( len( docs ) ), desc="Building Probe" ) : 
                 ## First add positive
                 positives = list()
