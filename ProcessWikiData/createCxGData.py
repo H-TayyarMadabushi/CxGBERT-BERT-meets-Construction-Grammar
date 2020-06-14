@@ -125,39 +125,56 @@ class createCxGData:
         data        = copy.copy( self.text ) 
 
         ## If prune_picked_sents then cxg_only
-        
-        ## Version 1: If there is a missed line break document
-        """
-        if prune_picked_sents : 
-            data         = list()
-            prev_newline = True
-            for index in tqdm( range( len( self.text ) ), desc="Prune data for base" ) : 
-                this_is_newline = False
-                if self.text[ index ] == '' or not self.included_sentences[ index ] : 
-                    this_is_newline = True
-                if this_is_newline and prev_newline : 
-                    continue
-                line = self.text[ index ] 
-                if not self.included_sentences[ index ] : 
-                    line = ''
-                data.append( line ) 
-                prev_newline = this_is_newline
-        """
 
-        ## Version 2: Ignore missed lines
-        if prune_picked_sents : 
-            data         = list()
-            for index in tqdm( range( len( self.text ) ), desc="Prune data for base" ) : 
-                this_is_newline = False
-                if self.text[ index ] == '' :
-                    data.append( self.text[ index ] ) 
-                if not self.included_sentences[ index ] : 
-                    continue
-                data.append( self.text[ index ] ) 
-
-        ## Sanity check.
         text_articles = len( [ x for x in self.text if x == '' ] ) 
         data_articles = len( [ x for x in data      if x == '' ] ) 
+
+        version_to_use = 2
+        if version_to_use == 1 :
+            ## Version 1: If there is a missed line break document
+            ignored_doc_breaks = 0 
+            added_doc_breaks   = 0
+            if prune_picked_sents : 
+                data         = list()
+                prev_newline = True
+                for index in tqdm( range( len( self.text ) ), desc="Prune data for base" ) : 
+                    line = self.text[ index ] 
+                    this_is_newline = False
+                    if self.text[ index ] == '' : 
+                        this_is_newline = True
+                    if not self.included_sentences[ index ] : 
+                        if not this_is_newline : 
+                            ## Add new line
+                            line = ''
+                            this_is_newline = True
+                            added_doc_breaks += 1
+                    if this_is_newline and prev_newline : 
+                        ignored_doc_breaks += 1
+                        continue
+                    data.append( line ) 
+                    prev_newline = this_is_newline
+
+                ## Sanity Check
+                data_articles = len( [ x for x in data      if x == '' ] ) 
+                data_articles = data_articles  -  added_doc_breaks + ignored_doc_breaks
+
+
+        if version_to_use == 2 : 
+            ## Version 2: Ignore missed lines
+            if prune_picked_sents : 
+                data         = list()
+                for index in tqdm( range( len( self.text ) ), desc="Prune data for base" ) : 
+                    this_is_newline = False
+                    if self.text[ index ] == '' :
+                        data.append( self.text[ index ] ) 
+                    if not self.included_sentences[ index ] : 
+                        continue
+                    data.append( self.text[ index ] ) 
+
+                data_articles = len( [ x for x in data      if x == '' ] ) 
+
+
+        ## Sanity check.
         assert data_articles == text_articles
 
         picked_len  = self.picked_cxg_all_sents
