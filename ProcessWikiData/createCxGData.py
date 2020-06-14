@@ -131,7 +131,7 @@ class createCxGData:
 
         version_to_use = 1
         if version_to_use == 1 :
-            ## Version 1: If there is a missed line break document
+            ## Version 1: If there is a missed line, break document
             ignored_doc_breaks = 0 
             added_doc_breaks   = 0
             if prune_picked_sents : 
@@ -257,9 +257,13 @@ class createCxGData:
               ( len( dev   ) < dev_count      ) or \
               ( len( test  ) < dev_count      ) : 
             passes_over_data += 1
-            if passes_over_data > 10 : 
+            if passes_over_data > 10 and limit_docs : 
                 print( "WARNING: Ran out of data to create probes, have train {}, test {}, dev {}. Will continue.".format( len( train ), len( test ), len( dev ) ) ) 
                 break
+            if passes_over_data > 50 : 
+                print( "WARNING: Ran out of data to create probes, have train {}, test {}, dev {}. Will continue.".format( len( train ), len( test ), len( dev ) ) ) 
+                break
+
             for doc_index in tqdm( range( len( docs ) ), desc="Building Probe" ) : 
                 ## First add positive
                 positives = list()
@@ -280,14 +284,23 @@ class createCxGData:
                     sent_2        = cxg_text[ doc_index ][ sent_picked_count[ doc_index ] ]
                     sent_picked_count[ doc_index ] += 1
 
-                    positives.append( [ sim, doc_sent_id_1, doc_sent_id_2, sent_1, sent_2 ] ) 
+                    positives.append( [ [ sim, doc_sent_id_1, doc_sent_id_2, sent_1, sent_2 ], doc_index ] ) 
 
                 if len( positives ) > 0 : 
-                    train.append( positives[0] ) 
+                    train.append( positives[0][0] ) 
                 if len( positives ) > 1 : 
-                    dev.append(   positives[1] )
+                    if len( dev ) != dev_count :
+                        dev.append(   positives[1][0] )
+                    else : 
+                        ## "Put back" sents
+                        sent_picked_count[ positives[1][1] ] -= 1
                 if len( positives ) > 2 : 
-                    test.append(  positives[2] ) 
+                    if len( test ) != dev_count : 
+                        test.append(  positives[2] ) 
+                    else : 
+                        ## "Put back" sents
+                        sent_picked_count[ positives[2][1] ] -= 1
+                        
 
                 if len( positives ) == 0 : 
                     continue
@@ -318,14 +331,24 @@ class createCxGData:
                         need_other_sent = False
                         break
 
-                    negatives.append( [ sim, doc_sent_id_1, doc_sent_id_2, sent_1, sent_2 ] ) 
+                    negatives.append( [ [ sim, doc_sent_id_1, doc_sent_id_2, sent_1, sent_2 ], doc_index ] )
+
                         
                 if len( negatives ) > 0 : 
-                    train.append( negatives[0] ) 
+                    train.append( negatives[0][0] ) 
                 if len( negatives ) > 1 : 
-                    dev.append(   negatives[1] ) 
+                    if len( dev ) != dev_count : 
+                        dev.append(   negatives[1][0] ) 
+                    else : 
+                        ## "Put back" sents
+                        sent_picked_count[ negatives[1][1] ] -= 1
                 if len( negatives ) > 2 : 
-                    test.append(  negatives[2] ) 
+                    if len( test ) != dev_count : 
+                        test.append(  negatives[2][0] ) 
+                    else : 
+                        ## "Put back" sents
+                        sent_picked_count[ negatives[2][1] ] -= 1
+
 
                     
         random.shuffle( train ) 
@@ -420,8 +443,20 @@ class createCxGData:
         self._create_probes( cxg_text[:-1], 'cxg_only' ) 
         self._create_probes( cxg_text     , 'cxg_all'  ) 
 
+        ## Write samples
+        self._write_samples( cxg_text[:-1] ) 
+
         return
 
+    def _write_samples( self, docs ) : 
+        
+        for file_id, doc in tqdm( enumerate( docs ), total=len( docs ), desc="Writing samples" ) : 
+            outfile = os.path.join( self.args.out_path, 'samples', str( file_id ) + '.txt' )
+            with open( outfile, 'w' ) as fh : 
+                if len( doc ) > 1000 : 
+                    doc = doc[:1000]
+                fh.write( '\n'.join( doc ) )
+        
     def print_cxg_freq( self ) : 
         output    = ''
         output_pk = list()
