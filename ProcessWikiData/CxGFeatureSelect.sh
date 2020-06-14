@@ -21,6 +21,7 @@ then
 fi
 
 mkdir ../../WikiText-103/$outdir
+mkdir ../../WikiText-103/$outdir/samples
 python createCxGData.py                                \
     ../../WikiText-103/processed/sents-cxg-tagged-#.pk \
     ../../WikiText-103/processed/sentences.txt         \
@@ -32,4 +33,5 @@ python createCxGData.py                                \
     --cxg_split           \
     --start 0             \
     --end           $end  \
-    --run_name $min-$max-45 
+    --run_name $min-$max-45  
+
