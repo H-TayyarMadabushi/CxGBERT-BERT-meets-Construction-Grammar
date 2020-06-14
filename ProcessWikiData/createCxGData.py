@@ -216,7 +216,9 @@ class createCxGData:
         
         constructions = len( cxg_text )
         # Train count will be 4 times this. 
-        dev_count   = constructions 
+        dev_count   = constructions * 2
+        if dev_count * 4 < 10000 : 
+            dev_count = int( 10000 / 4 ) + 10 ## round up 
         train = list()
         dev   = list()
         test  = list()
@@ -253,15 +255,9 @@ class createCxGData:
                 if len( positives ) > 0 : 
                     train.append( positives[0] ) 
                 if len( positives ) > 1 : 
-                    if len( dev )  != dev_count :
-                        dev.append(   positives[1] )
-                    else : 
-                        train.append( positives[1] )
+                    dev.append(   positives[1] )
                 if len( positives ) > 2 : 
-                    if len( test ) != dev_count : 
-                        test.append(  positives[2] ) 
-                    else : 
-                        train.append( positives[2] ) 
+                    test.append(  positives[2] ) 
 
                 if len( positives ) == 0 : 
                     continue
@@ -297,15 +293,20 @@ class createCxGData:
                 if len( negatives ) > 0 : 
                     train.append( negatives[0] ) 
                 if len( negatives ) > 1 : 
-                    if len( dev )  != dev_count :
-                        dev.append(   negatives[1] ) 
-                    else : 
-                        train.append( negatives[1] ) 
+                    dev.append(   negatives[1] ) 
                 if len( negatives ) > 2 : 
-                    if len( test ) != dev_count : 
-                        test.append(  negatives[2] ) 
-                    else : 
-                        train.append( negatives[2] ) 
+                    test.append(  negatives[2] ) 
+
+                    
+        random.shuffle( train ) 
+        random.shuffle( dev   ) 
+        random.shuffle( test  ) 
+        
+        # Add header 
+        header = [ 'SameCxG', 'DocID.SentID_1', 'DocID.SentID_2' 'Sent_1', 'Sent_2' ]
+        train  = [ header ] + train
+        dev    = [ header ] + dev 
+        test   = [ header ] + test
 
         for ( data, name ) in [ ( train, 'train' ), ( dev, 'dev' ), ( test, 'test' ) ] : 
             file_name = os.path.join( self.args.out_path, 
@@ -518,6 +519,9 @@ class createCxGData:
         self.write_cxg_data()
         self.write_base_data( prune_picked_sents=False )
         self.write_base_data( prune_picked_sents=True  )
+
+        print( "All Done." ) 
+        sys.stdout.flush()
         
         return
 
