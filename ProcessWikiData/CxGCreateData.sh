@@ -1,6 +1,6 @@
 export min=10
 export max=500
-if [ $# -neq 0 ] 
+if [ $# != 0 ] 
 then
     export min=$1
     export max=$2
