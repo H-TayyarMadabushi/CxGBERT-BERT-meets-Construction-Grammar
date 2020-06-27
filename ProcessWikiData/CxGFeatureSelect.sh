@@ -20,8 +20,8 @@ then
     exit
 fi
 
-mkdir ../../WikiText-103/$outdir
-mkdir ../../WikiText-103/$outdir/samples
+mkdir -p ../../WikiText-103/$outdir
+mkdir -p ../../WikiText-103/$outdir/samples
 python createCxGData.py                                \
     ../../WikiText-103/processed/sents-cxg-tagged-#.pk \
     ../../WikiText-103/processed/sentences.txt         \
