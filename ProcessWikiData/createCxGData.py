@@ -233,7 +233,9 @@ class createCxGData:
                 fh.write( '\n'.join( data ) ) 
         print( "Wrote rand train data to: ", outfile ) 
 
-        
+        return 
+
+
     def _create_probes( self, cxg_text, cxg_what, limit_docs=False ) : 
         
         constructions = len( cxg_text )
@@ -253,7 +255,7 @@ class createCxGData:
         sent_picked_count = [ 0        for i in docs ]
         sent_lens         = [ len( i ) for i in docs ]
         passes_over_data  = 0 
-        while ( len( train ) < dev_count  * 4 ) or \
+        while ( len( train ) < dev_count  * 2 ) or \
               ( len( dev   ) < dev_count      ) or \
               ( len( test  ) < dev_count      ) : 
             passes_over_data += 1
@@ -261,8 +263,9 @@ class createCxGData:
                 print( "WARNING: Ran out of data to create probes, have train {}, test {}, dev {}. Will continue.".format( len( train ), len( test ), len( dev ) ) ) 
                 break
             if passes_over_data > 50 : 
-                print( "WARNING: Ran out of data to create probes, have train {}, test {}, dev {}. Will continue.".format( len( train ), len( test ), len( dev ) ) ) 
-                break
+                print( "Required dev_count {}".format( dev_count ) )
+                raise Exception( "Ran out of data to create probes, have train {}, test {}, dev {}. Will continue.".format( len( train ), len( test ), len( dev ) ) ) 
+                
 
             for doc_index in tqdm( range( len( docs ) ), desc="Building Probe" ) : 
                 ## First add positive
@@ -296,7 +299,7 @@ class createCxGData:
                         sent_picked_count[ positives[1][1] ] -= 1
                 if len( positives ) > 2 : 
                     if len( test ) != dev_count : 
-                        test.append(  positives[2] ) 
+                        test.append(  positives[2][0] ) 
                     else : 
                         ## "Put back" sents
                         sent_picked_count[ positives[2][1] ] -= 1
@@ -356,7 +359,7 @@ class createCxGData:
         random.shuffle( test  ) 
         
         # Add header 
-        header = [ 'SameCxG', 'DocID.SentID_1', 'DocID.SentID_2' 'Sent_1', 'Sent_2' ]
+        header = [ 'SameCxG', 'DocID.SentID_1', 'DocID.SentID_2', 'Sent_1', 'Sent_2' ]
         train  = [ header ] + train
         dev    = [ header ] + dev 
         test   = [ header ] + test
@@ -441,7 +444,7 @@ class createCxGData:
         print( "Wrote CxG all train data to: ", outfile ) 
 
         self._create_probes( cxg_text[:-1], 'cxg_only' ) 
-        self._create_probes( cxg_text     , 'cxg_all'  ) 
+        # self._create_probes( cxg_text     , 'cxg_all'  ) 
 
         ## Write samples
         self._write_samples( cxg_text[:-1] ) 
