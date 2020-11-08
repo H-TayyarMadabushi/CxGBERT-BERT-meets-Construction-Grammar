@@ -27,8 +27,8 @@ def readin( path ) :
         
 
 def parse_args() : 
-    parser = argparse.ArgumentParser(description='Parse WikiText-25 into BERT pre-train format.')
-    parser.add_argument('in_path', type=str, help='path, including file name of training data from WikiText-25')
+    parser = argparse.ArgumentParser(description='Parse WikiText-(25|103) into BERT pre-train format.')
+    parser.add_argument('in_path', type=str, help='path, including file name of training data from WikiText-(25|103')
     parser.add_argument('out_path', type=str, help='output path')
     args = parser.parse_args()
     return args.in_path, args.out_path
