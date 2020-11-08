@@ -7,8 +7,8 @@ import argparse
 from tqdm          import tqdm
 
 def parse_args() : 
-    parser = argparse.ArgumentParser( description='Read parsed WikiText-25 data and tag with constructions.' ) 
-    parser.add_argument('in_path' , type=str, help='path, including file name of parsed training data from WikiText-25')
+    parser = argparse.ArgumentParser( description='Read parsed WikiText-(25|103) data and tag with constructions.' ) 
+    parser.add_argument('in_path' , type=str, help='path, including file name of parsed training data from WikiText-(25|103) (Output of wikiTextParser.py)')
     parser.add_argument('out_path', type=str, help='output path')
     parser.add_argument('workers' , type=int, help='CPUs to use')
     parser.add_argument('done' , type=int, default=-1, help='index of previoudly done shard (-1 for none)')
