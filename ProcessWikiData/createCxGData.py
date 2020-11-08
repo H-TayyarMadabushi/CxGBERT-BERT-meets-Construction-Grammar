@@ -239,7 +239,7 @@ class createCxGData:
     def _create_probes( self, cxg_text, cxg_what, limit_docs=False ) : 
         
         constructions = len( cxg_text )
-        # Train count will be 4 times this. 
+        # Train count will be 2 times this. 
         dev_count   = constructions * 2
         if dev_count * 4 < 10000 : 
             dev_count = int( 10000 / 4 ) + 10 ## round up 
