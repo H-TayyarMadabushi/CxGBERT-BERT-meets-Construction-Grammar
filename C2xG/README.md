@@ -3,7 +3,7 @@
 
 To tag sentences with constructions we make use of the package c2xg 1.0 with some minor modifications. 
 
-**If you are interested in sentences already tagged with construtional information, see**
+**If you are interested in sentences already tagged with construtional information, see the [Tagged Sentences](https://github.com/H-TayyarMadabushi/CxGBERT-BERT-meets-Construction-Grammar/blob/master/C2xG/README.md#tagged-sentences) section below**
 
 For details on how the constructions are identified and tagged, see *[Computational learning of construction grammars](https://www.cambridge.org/core/journals/language-and-cognition/article/computational-learning-of-construction-grammars/43E9BA63CD01CB2912029FF32721076E)*  and the associated program code [c2xg 1.0](https://github.com/jonathandunn/c2xg)
 
