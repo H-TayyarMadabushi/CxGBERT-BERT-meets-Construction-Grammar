@@ -45,6 +45,8 @@ Note that what these constructions are is not available.
 
 ## Tagging Sentences
 
-Tagging sentences is done using the C2xG with the changes listed in THIS folder. These changes will soon be merged with the original package. These changes do NOT in any way change the actual constructions, they are used only to greatly speed up tagging. 
+Tagging sentences is done using the C2xG with the changes listed in [THIS](https://github.com/H-TayyarMadabushi/CxGBERT-BERT-meets-Construction-Grammar/tree/master/C2xG/c2xg-update) folder. These changes will soon be merged with the original package. These changes do NOT in any way change the actual constructions, they are used only to greatly speed up tagging. 
 
-[tagger.py](https://github.com/H-TayyarMadabushi/CxGBERT-BERT-meets-Construction-Grammar/blob/master/C2xG/tagger.py) can be used to tag sentences in 100,000 shards 
+[wikiTextParser.py](https://github.com/H-TayyarMadabushi/CxGBERT-BERT-meets-Construction-Grammar/blob/master/C2xG/wikiTextParser.py) is first be used to clean WikiText-103 and generate a list of sentences. The output of this is equivalent to a single file with all files in the [sentences folder](https://github.com/H-TayyarMadabushi/CxGBERT-BERT-meets-Construction-Grammar/tree/master/C2xG/data/sentences) are concatenated.
+
+[tagger.py](https://github.com/H-TayyarMadabushi/CxGBERT-BERT-meets-Construction-Grammar/blob/master/C2xG/tagger.py) can be used to tag sentences in 100,000 shards. It needs to be run multiple times. 
