@@ -4,6 +4,9 @@ This repository contains data and code associated with the publication  *CxGBERT
 
 In the paper we show that **BERT has access to a information that linguists typically call constructional**. 
 
+## Table of Contents
+ - [What is Construction Grammar](#What-is-Construction-Grammar)
+
 ## What is Construction Grammar
 
 Construction Grammars are a set of linguistic theories that take constructions as their primary object of study. Constructions are either patterns that are frequently occurring or their meaning is not predictable from the sum of their parts (e.g. Idioms). This study focuses more on constructions that consist of frequently occuring patterns. 
