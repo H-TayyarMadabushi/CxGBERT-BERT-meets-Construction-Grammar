@@ -6,6 +6,12 @@ In the paper we show that **BERT has access to a information that linguists typi
 
 ## Table of Contents
  - [What is Construction Grammar](#What-is-Construction-Grammar)
+ - [Why Construction Grammar and BERT?](#Why-Construction-Grammar-and-BERT?)
+ - [Preprocessing](#Preprocessing)
+ - [Creating the Pre-Training and Probing Data](#Creating-the-Pre-Training-and-Probing-Data)
+ - [Constructional Test Data](#Constructional-Test-Data)
+ - [Evaluating BERT's ability to detect Constructions](#Evaluating-BERT's-ability-to-detect-Constructions)
+ - [Pre-training Hyperparameters](#Pre-training-Hyperparameters)
 
 ## What is Construction Grammar
 
