@@ -12,6 +12,7 @@ In the paper we show that **BERT has access to a information that linguists typi
  - [Constructional Test Data](#Constructional-Test-Data)
  - [Evaluating BERT's ability to detect Constructions](https://github.com/H-TayyarMadabushi/CxGBERT-BERT-meets-Construction-Grammar/blob/master/README.md#evaluating-berts-ability-to-detect-constructions)
  - [Pre-training Hyperparameters](#Pre-training-Hyperparameters)
+ - [Pre-Trained Models](#Pre-Trained-Models)
 
 ## What is Construction Grammar
 
@@ -153,4 +154,9 @@ Pre-training is done using
       --num_train_steps=100000 \
       --num_warmup_steps=1000 \
       --tpu_name=<tpu-name>
+
+
+## Pre-Trained Models
+
+We will be releasing the pre-trained models through HuggingFaces Transformers very soon. 
 
