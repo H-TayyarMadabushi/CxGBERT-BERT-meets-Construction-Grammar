@@ -4,6 +4,8 @@ This repository contains data and code associated with the publication  *CxGBERT
 
 In the paper we show that **BERT has access to a information that linguists typically call constructional**. 
 
+For sentences tagged with constructional information, see [this folder](https://github.com/H-TayyarMadabushi/CxGBERT-BERT-meets-Construction-Grammar/tree/master/C2xG#tagged-sentences).
+
 ## Table of Contents
  - [What is Construction Grammar](#What-is-Construction-Grammar)
  - [Why Construction Grammar and BERT?](#Why-Construction-Grammar-and-BERT?)
