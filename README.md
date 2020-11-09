@@ -10,7 +10,7 @@ In the paper we show that **BERT has access to a information that linguists typi
  - [Preprocessing](#Preprocessing)
  - [Creating the Pre-Training and Probing Data](#Creating-the-Pre-Training-and-Probing-Data)
  - [Constructional Test Data](#Constructional-Test-Data)
- - [Evaluating BERT's ability to detect Constructions](#Evaluating-BERT's-ability-to-detect-Constructions)
+ - [Evaluating BERT's ability to detect Constructions](https://github.com/H-TayyarMadabushi/CxGBERT-BERT-meets-Construction-Grammar/blob/master/README.md#evaluating-berts-ability-to-detect-constructions)
  - [Pre-training Hyperparameters](#Pre-training-Hyperparameters)
 
 ## What is Construction Grammar
