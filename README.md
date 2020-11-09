@@ -78,8 +78,8 @@ inoculate() {
 
 }
 
-export source=/home/h_tayyarmadabushi_1/CxGProbeDataV3Final
-export outloc=/home/h_tayyarmadabushi_1/cxg_inoc
+export source=</path/to/CxGTestData>
+export outloc=</paht/to/cxg_inoc_output>
 mkdir -p $outloc
 
 export data_dirs='2-50 100-1000 1000-10000 10000-6000000 2-10000 2-6000000 50-100'
