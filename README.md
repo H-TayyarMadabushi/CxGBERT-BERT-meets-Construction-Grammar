@@ -15,6 +15,9 @@ For sentences tagged with constructional information, see [this folder](https://
  - [Evaluating BERT's ability to detect Constructions](https://github.com/H-TayyarMadabushi/CxGBERT-BERT-meets-Construction-Grammar/blob/master/README.md#evaluating-berts-ability-to-detect-constructions)
  - [Pre-training Hyperparameters](#Pre-training-Hyperparameters)
  - [Pre-Trained Models](#Pre-Trained-Models)
+ - [Pre-Trained Models with Constructional Information](#Pre-Trained-Models-with-Constructional-Information)
+   * [Using Pre-trained models](#Using-Pre-trained-models)
+   * [Example use with the GLUE benchmark](#Example-use-with-the-GLUE-benchmark)
 
 ## What is Construction Grammar
 
@@ -158,7 +161,70 @@ Pre-training is done using
       --tpu_name=<tpu-name>
 
 
-## Pre-Trained Models
+## Pre-Trained Models with Constructional Information
 
-We will be releasing the pre-trained models through HuggingFaces Transformers very soon. 
+We also release all pre-trained models through 🤗 Transformers.  
+
+| 🤗 Transformers Name | Details |
+|--|--|
+| harish/CxGBERT-2-10000 | A BERT Model *pre-trained with constructional information* from constructions which have between 2 and 10,000 sentences as instances (**Most Useful Constructional BERT**) |
+| harish/BERTBaseClone-2-10000 | A clone of BERT pre-trained on the same data with no changes to training data - no constructional information. (**Baseline**). |
+| harish/BERTRand-2-10000 | A clone of BERT pre-trained on the same data with the articles randomised. |
+| harish/BERT-Plus-CxG-20K | BERT Base further pre-trained with Constructional information (2-10,000 sentences) for 20,000 steps |
+| harish/BERT-Plus-CxG-100K | BERT Base further pre-trained with Constructional information (2-10,000 sentences) for 100,000 steps (**Most effective on Sentiment Analysis**)|
+| harish/CxGBERT-10000-6000000 | BERT Model pre-trained with constructional information from constructions which have more than 10,000 sentences as instances (**Most General Constructional BERT**| 
+| harish/BERTBaseClone-10000-6000000 | A clone of BERT pre-trained on the above data with no changes to training data (no constructional information).|
+| harish/BERTRand-10000-6000000 | A clone of BERT pre-trained on the above data with the articles randomised.|
+
+
+
+
+### Using Pre-trained models
+
+```python
+from transformers import BertTokenizer, BertModel
+
+model = BertModel.from_pretrained("harish/CxGBERT-2-10000" )
+tokenizer = BertTokenizer.from_pretrained("harish/CxGBERT-2-10000" )
+
+model = BertModel.from_pretrained("harish/BERTBaseClone-2-10000" )
+tokenizer = BertTokenizer.from_pretrained("harish/BERTBaseClone-2-10000" )
+
+model = BertModel.from_pretrained("harish/BERTRand-2-10000"  )
+tokenizer = BertTokenizer.from_pretrained("harish/BERTRand-2-10000"  )
+
+
+model = BertModel.from_pretrained("harish/BERT-Plus-CxG-20K" )
+tokenizer = BertTokenizer.from_pretrained("harish/BERT-Plus-CxG-20K" )
+
+model = BertModel.from_pretrained("harish/BERT-Plus-CxG-100K"  )
+tokenizer = BertTokenizer.from_pretrained("harish/BERT-Plus-CxG-100K"  )
+
+
+model = BertModel.from_pretrained("harish/CxGBERT-10000-6000000" )
+tokenizer = BertTokenizer.from_pretrained("harish/CxGBERT-10000-6000000" )
+
+model = BertModel.from_pretrained("harish/BERTBaseClone-10000-6000000" )
+tokenizer = BertTokenizer.from_pretrained("harish/BERTBaseClone-10000-6000000" )
+
+model = BertModel.from_pretrained("harish/BERTRand-10000-6000000"  )
+tokenizer = BertTokenizer.from_pretrained("harish/BERTRand-10000-6000000"  )
+
+```
+
+### Example use with the GLUE benchmark
+
+```bash
+python examples/text-classification/run_glue.py 	\
+	--model_name_or_path 'harish/CxGBERT-2-10000' 	\
+	--task_name MRPC 				\
+	--do_train 					\
+	--do_eval 					\
+	--max_seq_length 128 				\
+	--per_gpu_train_batch_size 32 			\
+	--learning_rate 2e-5  				\
+	--num_train_epochs 3.0 				\
+	--output_dir ~/out
+
+```
 
