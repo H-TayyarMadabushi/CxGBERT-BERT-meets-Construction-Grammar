@@ -22,6 +22,7 @@ If you make use of this work, please [cite](#Citation) our work
  - [Pre-Trained Models with Constructional Information](#Pre-Trained-Models-with-Constructional-Information)
    * [Using Pre-trained models](#Using-Pre-trained-models)
    * [Example use with the GLUE benchmark](#Example-use-with-the-GLUE-benchmark)
+ - [Citation](#Citation)
 
 ## What is Construction Grammar
 
