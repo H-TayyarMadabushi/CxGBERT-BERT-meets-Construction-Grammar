@@ -1,12 +1,14 @@
 # CxGBERT: BERT meets Construction Grammar
 
-This repository contains data and code associated with the publication  *CxGBERT: BERT meets Construction Grammar"* (COLING 2020). 
+This repository contains data and code associated with the publication  *[CxGBERT: BERT meets Construction Grammar](https://arxiv.org/abs/2011.04134)* (COLING 2020). 
 
 In the paper we show that **BERT has access to information that linguists typically call constructional**. 
 
 For sentences tagged with constructional information, see [this folder](https://github.com/H-TayyarMadabushi/CxGBERT-BERT-meets-Construction-Grammar/tree/master/C2xG#tagged-sentences).
 
 For BERT Pre-Trained with Constructional Information, see [this section.](#Pre-Trained-Models-with-Constructional-Information)
+
+If you make use of this work, please [cite](#Citation) our work
 
 ## Table of Contents
  - [What is Construction Grammar](#What-is-Construction-Grammar)
@@ -230,3 +232,18 @@ python examples/text-classification/run_glue.py 	\
 
 ```
 
+
+## Citation
+
+If you make use of this work, please cite us: 
+
+```bibtex
+@misc{tayyarmadabushi2020cxgbert,
+      title={CxGBERT: BERT meets Construction Grammar}, 
+      author={Harish Tayyar Madabushi and Laurence Romain and Dagmar Divjak and Petar Milin},
+      year={2020},
+      eprint={2011.04134},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL}
+}
+```
