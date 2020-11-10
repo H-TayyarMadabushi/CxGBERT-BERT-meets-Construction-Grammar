@@ -2,7 +2,7 @@
 
 This repository contains data and code associated with the publication  *CxGBERT: BERT meets Construction Grammar"* (COLING 2020). 
 
-In the paper we show that **BERT has access to a information that linguists typically call constructional**. 
+In the paper we show that **BERT has access to information that linguists typically call constructional**. 
 
 For sentences tagged with constructional information, see [this folder](https://github.com/H-TayyarMadabushi/CxGBERT-BERT-meets-Construction-Grammar/tree/master/C2xG#tagged-sentences).
 
