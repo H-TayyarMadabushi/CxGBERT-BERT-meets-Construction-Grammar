@@ -6,7 +6,7 @@ In the paper we show that **BERT has access to a information that linguists typi
 
 For sentences tagged with constructional information, see [this folder](https://github.com/H-TayyarMadabushi/CxGBERT-BERT-meets-Construction-Grammar/tree/master/C2xG#tagged-sentences).
 
-For BERT Pre-Trained with Constructional Information, see [this section.](##Pre-Trained-Models-with-Constructional-Information)
+For BERT Pre-Trained with Constructional Information, see [this section.](#Pre-Trained-Models-with-Constructional-Information)
 
 ## Table of Contents
  - [What is Construction Grammar](#What-is-Construction-Grammar)
