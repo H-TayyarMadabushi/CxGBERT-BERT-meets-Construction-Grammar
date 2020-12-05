@@ -1,6 +1,6 @@
 # CxGBERT: BERT meets Construction Grammar
 
-This repository contains data and code associated with the publication  *[CxGBERT: BERT meets Construction Grammar](https://arxiv.org/abs/2011.04134)* (COLING 2020). 
+This repository contains data and code associated with the publication  *[CxGBERT: BERT meets Construction Grammar](https://www.aclweb.org/anthology/2020.coling-main.355/)* (COLING 2020). 
 
 In the paper we show that **BERT has access to information that linguists typically call constructional**. 
 
@@ -239,12 +239,19 @@ python examples/text-classification/run_glue.py 	\
 If you make use of this work, please cite us: 
 
 ```bibtex
-@misc{tayyarmadabushi2020cxgbert,
-      title={CxGBERT: BERT meets Construction Grammar}, 
-      author={Harish Tayyar Madabushi and Laurence Romain and Dagmar Divjak and Petar Milin},
-      year={2020},
-      eprint={2011.04134},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL}
+@inproceedings{tayyar-madabushi-etal-2020-cxgbert,
+    title = "{C}x{GBERT}: {BERT} meets Construction Grammar",
+    author = "Tayyar Madabushi, Harish  and
+      Romain, Laurence  and
+      Divjak, Dagmar  and
+      Milin, Petar",
+    booktitle = "Proceedings of the 28th International Conference on Computational Linguistics",
+    month = dec,
+    year = "2020",
+    address = "Barcelona, Spain (Online)",
+    publisher = "International Committee on Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/2020.coling-main.355",
+    pages = "4020--4032",
+    abstract = "While lexico-semantic elements no doubt capture a large amount of linguistic information, it has been argued that they do not capture all information contained in text. This assumption is central to constructionist approaches to language which argue that language consists of constructions, learned pairings of a form and a function or meaning that are either frequent or have a meaning that cannot be predicted from its component parts. BERT{'}s training objectives give it access to a tremendous amount of lexico-semantic information, and while BERTology has shown that BERT captures certain important linguistic dimensions, there have been no studies exploring the extent to which BERT might have access to constructional information. In this work we design several probes and conduct extensive experiments to answer this question. Our results allow us to conclude that BERT does indeed have access to a significant amount of information, much of which linguists typically call constructional information. The impact of this observation is potentially far-reaching as it provides insights into what deep learning methods learn from text, while also showing that information contained in constructions is redundantly encoded in lexico-semantics.",
 }
 ```
